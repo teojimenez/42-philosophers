@@ -12,10 +12,10 @@
 
 NAME = philo
 
-FLAGS = -Wall -Wextra -Werror -g
+FLAGS = -pthread -Wall -Wextra -Werror -g
 # -fsanitize=address
 
-SRC =	src/philo.c
+SRC =	src/philo.c src/inputs.c src/utils.c
 
 OBJECTS = $(SRC:.c=.o)
 
