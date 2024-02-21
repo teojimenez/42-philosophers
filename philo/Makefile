@@ -13,7 +13,7 @@
 NAME = philo
 
 FLAGS = -pthread -Wall -Wextra -Werror -g
-# -fsanitize=address
+# -fsanitize=thread
 
 SRC =	src/philo.c src/inputs.c src/utils.c
 
