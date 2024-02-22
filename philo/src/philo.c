@@ -15,25 +15,64 @@
 // 1 second == 1000 mili s      -> 1 segundo es mas grande que 1 milisegundo
 // 1 microsegundo == 0.001 mili s   -> 1 microsegundo es mas pequeño que 1 mili segundo
 
+int	ft_eat(t_philo *philo)
+{
+	pthread_mutex_lock(&philo->leftFork->mtx_fork);
+	pthread_mutex_lock(&philo->rightFork->mtx_fork);
+	//printf("TIME BEFORE: %lld \n", ft_get_time() - philo->data->start_time);
+	ft_usleep(philo->data->t_to_eat);
+
+	pthread_mutex_unlock(&philo->rightFork->mtx_fork);
+	pthread_mutex_unlock(&philo->leftFork->mtx_fork);
+	printf("HAS TAKEN A FORK %i\n", philo->id);
+	//printf("TIME AFTER: %lld \n", ft_get_time() - philo->data->start_time);
+	return (1);
+}
+
 void	*routine(void *philo_void)
 {
 	t_philo	*philo;
 
 	philo = (t_philo *)philo_void;
-	while (*philo->data->anyDead < 1 && philo->count_meals != philo->data->nb_philos)
+
+	if (philo->id % 2 != 0)
+		ft_usleep(philo->data->t_to_eat / 2);
+	while (philo->data->anyDead != 1 && philo->count_meals != philo->data->nb_philos)
 	{
 		// pthread_mutex_lock(&philo->leftFork->mtx_fork);
 		// pthread_mutex_unlock(&philo->leftFork->mtx_fork);
 		//sleep
 		//think
-		if (philo->count_meals > 0)
+		//if (philo->count_meals > 0) //porque si no han comido almenos una vez, no pueden hacer esto
+		//{
+			// if (!sleep(philo)) //augmentar el count_meals y si se tiene que acabr frenar desde ahi
+			// 	break ;
+			// if (!think(philo))
+			// 	break ;
+		//}
+		if(philo->data->anyDead == 1 || philo->data->philo_already_eat \
+		== philo->data->nb_philos)
+			break;
+		if(!ft_eat(philo))
+			break;
+	}
+	return (NULL);
+}
+void	*monitor(void *data_void)
+{
+	t_data	*data;
+	int 	i;
+
+	i = -1;
+	data = (t_data *)data_void;
+	while (data->anyDead != 1 && data->philo_already_eat < data->nb_philos \
+	&& ++i != data->nb_philos)
+	{
+		if (ft_get_time() - data->t_to_die < (ft_get_time() - data->philos[i].last_meal_time))
 		{
-			if (sleep(philo) != 1)
-				break ;
-			if (think(philo) != 1)
-				break ;
+			data->anyDead = 1;
+			// print dead
 		}
-		//eat
 	}
 	return (NULL);
 }
@@ -43,6 +82,8 @@ int init_routine(t_data *data)
 	int i;
 
 	i = -1;
+	data->start_time = ft_get_time();
+	pthread_create(&data->monitor, NULL, &monitor, (void *)&data); //monitor
 	while (++i < data->nb_philos)
 	{
 		if (pthread_create(&data->philos[i].thread_id, NULL, &routine, \
@@ -51,8 +92,10 @@ int init_routine(t_data *data)
 		ft_usleep(1);
 	}
 	i = -1;
+	pthread_join(data->monitor, NULL); //monitor
 	while (++i < data->nb_philos)
 	{
+		data->philos[i].last_meal_time = data->start_time;
 		if (pthread_join(data->philos[i].thread_id, NULL) != 0)
 			return (0); //false (error)
 	}
@@ -131,10 +174,10 @@ void	init(int argc, char **argv, t_data	*data)
 	data->t_to_die = ft_atoi(argv[2]);
 	data->t_to_eat = ft_atoi(argv[3]);
 	data->t_to_sleep = ft_atoi(argv[4]);
-	data->start_time = ft_get_time();
 	data->anyDead = 0;
-	if(!data->start_time)
-		return ; //error
+	data->philo_already_eat = 0;
+	// if(!data->start_time)
+	// 	return ; //error
 	init_forks(data);
 	init_philos(data);
 	if(!init_routine(data))

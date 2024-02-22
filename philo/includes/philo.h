@@ -40,6 +40,7 @@ typedef struct s_philo {
 	pthread_t				thread_id;
 	int						count_meals;
 	int						status;
+	u_int64_t				last_meal_time;
 	struct s_fork			*leftFork; //cada uno
 	struct s_fork			*rightFork; //cada uno
 	// pthread_mutex_t	lock;
@@ -54,7 +55,9 @@ typedef struct s_data {
 	u_int64_t			t_to_eat;
 	u_int64_t			t_to_sleep;
 	int					ts_must_eat;
-	int					*anyDead;
+	int					philo_already_eat;
+	int					anyDead;
+	pthread_t			monitor;
 } t_data;
 // number_of_philosophers      time_to_die       time_to_eat       time_to_sleep
 // [number_of_times_each_philosopher_must_eat]
