@@ -13,21 +13,40 @@
 #include "../includes/philo.h"
 
 // 1 second == 1000 mili s      -> 1 segundo es mas grande que 1 milisegundo
-// 1 microsegundo == 0.001 mili s   -> 1 microsegundo es mas pequeño que 1 mili segundo
+// 1 microsegund == 0.001 mili s   -> 1 microsegundo es mas pequeño que 1 mili segundo
 
 int	ft_eat(t_philo *philo)
 {
-	pthread_mutex_lock(&philo->leftFork->mtx_fork);
 	pthread_mutex_lock(&philo->rightFork->mtx_fork);
+	pthread_mutex_lock(&philo->leftFork->mtx_fork);
+	printf("%lld %i %s\n", ft_get_time() - philo->data->start_time, philo->id, S_FORK_TAKEN);
+	printf("%lld %i %s\n", ft_get_time() - philo->data->start_time, philo->id, S_FORK_TAKEN);
+	printf("%lld %s%i %s%s\n", ft_get_time() - philo->data->start_time, MAGENTA, philo->id, RESET, S_EATING);
 	//printf("TIME BEFORE: %lld \n", ft_get_time() - philo->data->start_time);
+	philo->last_meal_time = ft_get_time();
+	if (philo->count_meals < philo->data->ts_must_eat && philo->data->ts_must_eat != -1)
+		philo->count_meals++;
 	ft_usleep(philo->data->t_to_eat);
-
-	pthread_mutex_unlock(&philo->rightFork->mtx_fork);
+	// printf("%lld %i %s\n", time, philo->id, S_FORK_TAKEN);
 	pthread_mutex_unlock(&philo->leftFork->mtx_fork);
-	printf("HAS TAKEN A FORK %i\n", philo->id);
-	//printf("TIME AFTER: %lld \n", ft_get_time() - philo->data->start_time);
+	pthread_mutex_unlock(&philo->rightFork->mtx_fork);
+	// printf("MUTEX RIGHT-> %p\n", &philo->rightFork->mtx_fork);
+	// printf("MUTEX LEFT-> %p\n", &philo->leftFork->mtx_fork);
+	// printf("%lld %i %s\n", time, philo->id, S_FORK_TAKEN);
 	return (1);
 }
+int	ft_sleep(t_philo *philo)
+{
+	printf("%lld %s%i %s%s\n", ft_get_time() - philo->data->start_time, MAGENTA, philo->id, RESET, S_SLEEPING);
+	ft_usleep(philo->data->t_to_sleep);
+	return (1);
+}
+int	ft_think(t_philo *philo)
+{
+	printf("%lld %s%i %s%s\n", ft_get_time() - philo->data->start_time, MAGENTA, philo->id, RESET, S_THINKING);
+	return (1);
+}
+
 
 void	*routine(void *philo_void)
 {
@@ -35,26 +54,27 @@ void	*routine(void *philo_void)
 
 	philo = (t_philo *)philo_void;
 
-	if (philo->id % 2 != 0)
-		ft_usleep(philo->data->t_to_eat / 2);
+	// if (philo->id % 2 != 0)
+	// 	ft_usleep(philo->data->t_to_eat / 2);
 	while (philo->data->anyDead != 1 && philo->count_meals != philo->data->nb_philos)
 	{
 		// pthread_mutex_lock(&philo->leftFork->mtx_fork);
 		// pthread_mutex_unlock(&philo->leftFork->mtx_fork);
 		//sleep
 		//think
-		//if (philo->count_meals > 0) //porque si no han comido almenos una vez, no pueden hacer esto
-		//{
-			// if (!sleep(philo)) //augmentar el count_meals y si se tiene que acabr frenar desde ahi
-			// 	break ;
-			// if (!think(philo))
-			// 	break ;
-		//}
+		if (philo->count_meals > 0) //porque si no han comido almenos una vez, no pueden hacer esto
+		{
+			if (!ft_sleep(philo)) //augmentar el count_meals y si se tiene que acabr frenar desde ahi
+				break ;
+			if (!ft_think(philo))
+				break ;
+		}
 		if(philo->data->anyDead == 1 || philo->data->philo_already_eat \
 		== philo->data->nb_philos)
 			break;
 		if(!ft_eat(philo))
 			break;
+		ft_usleep(50);
 	}
 	return (NULL);
 }
@@ -82,8 +102,8 @@ int init_routine(t_data *data)
 	int i;
 
 	i = -1;
-	data->start_time = ft_get_time();
 	pthread_create(&data->monitor, NULL, &monitor, (void *)&data); //monitor
+	data->start_time = ft_get_time();
 	while (++i < data->nb_philos)
 	{
 		if (pthread_create(&data->philos[i].thread_id, NULL, &routine, \
@@ -119,6 +139,7 @@ void	give_philo_forks(t_data *data)
 		else
 			data->philos[i].leftFork = &data->forks[i + 1];
 		data->philos[i].rightFork = &data->forks[i];
+		// printf("PHILO %d\nRIGHT: %p, LEFT: %p\n", data->philos[i].id + 1, &data->philos[i].rightFork->mtx_fork, &data->philos[i].leftFork->mtx_fork);
 	}
 	// printf("\nPHILO %i:\nRIGHT %p\nLEFT %p", data->philos[i - 1].id, data->philos[i - 1].rightFork, data->philos[i - 1].leftFork);
 }

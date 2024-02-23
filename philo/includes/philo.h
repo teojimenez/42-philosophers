@@ -20,13 +20,24 @@
 # include <sys/time.h>
 # include <pthread.h>
 
+//COLORS
+
+#define RESET   "\x1B[0m"
+#define RED     "\x1B[31m"
+#define GREEN   "\x1B[32m"
+#define YELLOW  "\x1B[33m"
+#define BLUE    "\x1B[34m"
+#define MAGENTA "\x1B[35m"
+#define CYAN    "\x1B[36m"
+#define WHITE   "\x1B[37m"
+
 //DEFINES
 
-# define STATUS_FORK_TAKEN "has taken a fork"
-# define STATUS_EATING "is eating"
-# define STATUS_SLEEPING "is sleeping"
-# define STATUS_THINKING "is thinking"
-# define STATUS_DIED "died"
+# define S_FORK_TAKEN "has taken a fork"
+# define S_EATING "is eating"
+# define S_SLEEPING "is sleeping"
+# define S_THINKING "is thinking"
+# define S_DIED "died"
 
 // STRUCTS
 typedef struct s_fork
